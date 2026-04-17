@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>PLC.Shared.DistributedConcurrentDictionary</RootNamespace>
+    <AssemblyName>DistributedConcurrentDictionary</AssemblyName>
+    <Description>Distributed IDictionary backed by ZiggyCreatures.FusionCache (JSON values) and RedLock.net for safe cross-node writes. Redis SET index enables Keys/Values/Count.</Description>
+    <PackageId>PLC.Shared.DistributedConcurrentDictionary</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>PORTLOGICS</Authors>
+    <PackageTags>FusionCache;RedLock;Redis;Distributed;Dictionary;IDictionary</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.6.0" />
+    <PackageReference Include="RedLock.net" Version="2.3.2" />
+    <PackageReference Include="StackExchange.Redis" Version="2.10.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
