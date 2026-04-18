@@ -11,8 +11,8 @@
     <Description>Distributed IDictionary backed by FusionCache (JSON), RedLock.net, and Redis. Includes IDistributedDictionaryFactory and DI registration via AddDistributedDictionaryNode.</Description>
     <PackageTags>FusionCache;RedLock;Redis;Distributed;Dictionary;IDictionary</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/portlogicsvn/FusionCacheRedLockDictionary</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/portlogicsvn/FusionCacheRedLockDictionary.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/portlogicsvn/DistributedConcurrentDictionary</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/portlogicsvn/DistributedConcurrentDictionary.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

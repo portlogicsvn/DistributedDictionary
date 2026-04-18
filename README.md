@@ -3,6 +3,7 @@
 .NET library: a **distributed dictionary** implementing `IDictionary<TKey, TValue>`, `IReadOnlyDictionary<TKey, TValue>`, and non-generic `IDictionary`. It combines **ZiggyCreatures.FusionCache** (JSON values), **RedLock.net** (per-key distributed locks), and **Redis** (SET index for keys, `Count`, `Keys`, `Values`).
 
 - **NuGet package ID:** `PLC.DistributedDictionary` — [nuget.org/packages/PLC.DistributedDictionary](https://www.nuget.org/packages/PLC.DistributedDictionary) (after you publish)
+- **Source:** [github.com/portlogicsvn/DistributedConcurrentDictionary](https://github.com/portlogicsvn/DistributedConcurrentDictionary)
 - **Code namespace:** `PLC.Shared.DistributedConcurrentDictionary` (unchanged; `using` statements stay the same)
 - **Package docs (install, quick start, API):** [src/DistributedConcurrentDictionary/README.md](src/DistributedConcurrentDictionary/README.md)
 
