@@ -42,7 +42,7 @@ AnsiConsole.Write(
             new Markup(
                 $"[bold]Redis[/]: [cyan]{Markup.Escape(redisConnection)}[/]\n"
                 + "[dim]FusionCache (bộ nhớ + Redis) + RedLock khóa theo key + Redis SET làm chỉ mục[/]"))
-        .Header("[bold yellow]PLC.Shared.DistributedConcurrentDictionary[/] — demo trực quan")
+        .Header("[bold yellow]PLC.DistributedDictionary[/] — demo trực quan")
         .Border(BoxBorder.Double)
         .Padding(1, 1));
 

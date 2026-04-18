@@ -2,11 +2,13 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>PLC.Shared.DistributedConcurrentDictionary</RootNamespace>
-    <AssemblyName>DistributedConcurrentDictionary</AssemblyName>
-    <Description>Distributed IDictionary backed by ZiggyCreatures.FusionCache (JSON values) and RedLock.net for safe cross-node writes. Redis SET index enables Keys/Values/Count.</Description>
-    <PackageId>PLC.Shared.DistributedConcurrentDictionary</PackageId>
-    <Version>1.0.0</Version>
+    <AssemblyName>PLC.DistributedDictionary</AssemblyName>
+    <PackageId>PLC.DistributedDictionary</PackageId>
+    <Title>PLC.DistributedDictionary</Title>
+    <Version>1.0.1</Version>
     <Authors>PORTLOGICS</Authors>
+    <Copyright>Copyright © PORTLOGICS 2026</Copyright>
+    <Description>Distributed IDictionary backed by FusionCache (JSON), RedLock.net, and Redis. Includes IDistributedDictionaryFactory and DI registration via AddDistributedDictionaryNode.</Description>
     <PackageTags>FusionCache;RedLock;Redis;Distributed;Dictionary;IDictionary</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/portlogicsvn/FusionCacheRedLockDictionary</PackageProjectUrl>

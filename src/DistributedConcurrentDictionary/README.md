@@ -1,4 +1,4 @@
-# PLC.Shared.DistributedConcurrentDictionary
+# PLC.DistributedDictionary (NuGet) / `PLC.Shared.DistributedConcurrentDictionary` (namespace)
 
 Distributed dictionary for .NET, backed by:
 
@@ -17,8 +17,10 @@ Implemented interfaces:
 ## Install
 
 ```bash
-dotnet add package PLC.Shared.DistributedConcurrentDictionary
+dotnet add package PLC.DistributedDictionary
 ```
+
+Namespaces and types remain under **`PLC.Shared.DistributedConcurrentDictionary`** (e.g. `using PLC.Shared.DistributedConcurrentDictionary;`).
 
 ## Quick Start
 
