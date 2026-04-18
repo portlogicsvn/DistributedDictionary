@@ -87,4 +87,41 @@ public sealed class FusionRedisDictionaryOptions
 
     /// <summary>Optional telemetry callback for lock/cache/redis events.</summary>
     public Action<FusionRedisTelemetryEvent>? OnTelemetry { get; set; }
+
+    /// <summary>
+    /// Shallow copy with <see cref="KeyPrefix"/> extended as <c>{basePrefix}:{topic}</c> (after trim).
+    /// Use with <see cref="DistributedTopicDictionaries"/> so each logical topic gets an isolated Redis keyspace.
+    /// </summary>
+    public FusionRedisDictionaryOptions WithTopic(string topic)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(topic);
+        string segment = topic.Trim().Trim(':');
+        if (segment.Length == 0)
+        {
+            throw new ArgumentException("Topic must contain non-whitespace characters.", nameof(topic));
+        }
+
+        string b = KeyPrefix.Trim().TrimEnd(':');
+        if (b.Length == 0)
+        {
+            throw new InvalidOperationException("KeyPrefix must be non-empty before WithTopic.");
+        }
+
+        return new FusionRedisDictionaryOptions
+        {
+            KeyPrefix = b + ":" + segment,
+            LockExpiry = LockExpiry,
+            LockWait = LockWait,
+            LockRetry = LockRetry,
+            DefaultEntryOptions = DefaultEntryOptions,
+            JsonOptions = JsonOptions,
+            FailureMode = FailureMode,
+            DataCriticality = DataCriticality,
+            RedisRetryCount = RedisRetryCount,
+            RedisRetryDelay = RedisRetryDelay,
+            CircuitBreakerFailureThreshold = CircuitBreakerFailureThreshold,
+            CircuitBreakerOpenDuration = CircuitBreakerOpenDuration,
+            OnTelemetry = OnTelemetry,
+        };
+    }
 }

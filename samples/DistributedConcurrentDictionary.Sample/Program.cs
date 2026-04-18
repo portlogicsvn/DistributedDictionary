@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using PLC.Shared.DistributedConcurrentDictionary;
+using PLC.Shared.DistributedConcurrentDictionary.Sample;
 using RedLockNet;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
@@ -27,6 +30,12 @@ if (rawArgs.Any(static a => string.Equals(a, "--backplane", StringComparison.Ord
 }
 
 string redisConnection = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost:6379";
+
+if (rawArgs.Any(static a => string.Equals(a, "--di", StringComparison.OrdinalIgnoreCase)))
+{
+    RunDependencyInjectionDemo(redisConnection);
+    return;
+}
 
 AnsiConsole.Write(
     new Panel(
@@ -582,6 +591,29 @@ static void ExecuteSingleCommand(
     }
 
     PrintStamped(instance, "Unsupported scripted command: " + line);
+}
+
+static void RunDependencyInjectionDemo(string redisConnection)
+{
+    HostApplicationBuilder builder = Host.CreateApplicationBuilder(Array.Empty<string>());
+    builder.Services.AddDistributedDictionaryNode(node =>
+    {
+        node.RedisConnectionString = redisConnection;
+        node.ConfigureDistributedDictionary = o =>
+        {
+            o.KeyPrefix = "sample:di";
+            o.DefaultEntryOptions = new FusionCacheEntryOptions { Duration = TimeSpan.FromMinutes(5) };
+        };
+        node.ConfigureFusionCacheOptions = fc =>
+        {
+            fc.DefaultEntryOptions.Duration = TimeSpan.FromMinutes(10);
+        };
+    });
+    builder.Services.AddSingleton<MultiTopicCatalogService>();
+
+    using IHost host = builder.Build();
+    MultiTopicCatalogService demo = host.Services.GetRequiredService<MultiTopicCatalogService>();
+    demo.Run();
 }
 
 static string GetArgValue(string[] runtimeArgs, string key, string fallback)

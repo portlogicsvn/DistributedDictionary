@@ -22,6 +22,8 @@ dotnet add package PLC.Shared.DistributedConcurrentDictionary
 
 ## Quick Start
 
+Minimal setup — default `KeyPrefix` is `dcd`, Redis retry/circuit defaults apply, `FailureMode` is `FailFast`:
+
 ```csharp
 using PLC.Shared.DistributedConcurrentDictionary;
 using RedLockNet;
@@ -30,32 +32,93 @@ using RedLockNet.SERedis.Configuration;
 using StackExchange.Redis;
 using ZiggyCreatures.Caching.Fusion;
 
-ConnectionMultiplexer mux = ConnectionMultiplexer.Connect("localhost:6379");
+using ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost:6379");
 FusionCache cache = new FusionCache(new FusionCacheOptions());
-IDistributedLockFactory lockFactory = RedLockFactory.Create(new[] { new RedLockMultiplexer(mux) });
+IDistributedLockFactory locks = RedLockFactory.Create(new[] { new RedLockMultiplexer(redis) });
 
-JsonFusionRedisDistributedDictionary<string, MyValue> dict = new JsonFusionRedisDistributedDictionary<string, MyValue>(
+JsonFusionRedisDistributedDictionary<string, MyValue> dict =
+    new JsonFusionRedisDistributedDictionary<string, MyValue>(cache, redis, locks);
+
+dict["a"] = new MyValue();
+bool found = dict.TryGetValue("a", out MyValue? value);
+FusionRedisDictionaryHealthSnapshot health = dict.GetHealthSnapshot();
+```
+
+Optional: isolate keys in Redis and relax failure handling (e.g. keep serving cache when Redis is down):
+
+```csharp
+var dict = new JsonFusionRedisDistributedDictionary<string, MyValue>(
     cache,
-    mux,
-    lockFactory,
+    redis,
+    locks,
     new FusionRedisDictionaryOptions
     {
         KeyPrefix = "myapp:dict",
-        DataCriticality = TosDataCriticality.Operational,
         FailureMode = FusionRedisFailureMode.ReadOnlyStale,
-        RedisRetryCount = 2,
-        RedisRetryDelay = TimeSpan.FromMilliseconds(100),
-        CircuitBreakerFailureThreshold = 5,
-        CircuitBreakerOpenDuration = TimeSpan.FromSeconds(10),
-        OnTelemetry = evt =>
-        {
-            Console.WriteLine($"{evt.EventType} | {evt.Operation} | {evt.Message}");
-        },
+        OnTelemetry = static e => Console.WriteLine($"{e.EventType} | {e.Message}"),
     });
+```
 
-dict["a"] = new MyValue();
-bool found = dict.TryGetValue("a", out MyValue value);
-FusionRedisDictionaryHealthSnapshot health = dict.GetHealthSnapshot();
+## Topics: register once, use by name
+
+**Step 1 — `Program.cs` (or DI):** build shared `FusionCache`, Redis, RedLock once, plus a `DistributedTopicDictionaries` with a **base** `KeyPrefix` (e.g. `myapp`).
+
+```csharp
+using ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost:6379");
+FusionCache cache = new FusionCache(new FusionCacheOptions());
+IDistributedLockFactory locks = RedLockFactory.Create(new[] { new RedLockMultiplexer(redis) });
+
+DistributedTopicDictionaries topics = new DistributedTopicDictionaries(
+    cache,
+    redis,
+    locks,
+    new FusionRedisDictionaryOptions { KeyPrefix = "myapp" });
+
+// keep `topics` in DI / static / host service for the app lifetime
+```
+
+**Step 2 — anywhere:** resolve the same hub, then call `GetOrAdd<TKey,TValue>(topic)`. The first call for that topic + type pair creates the dictionary; later calls return the **same** instance. Redis keyspace is `myapp:{topic}:…` per topic.
+
+```csharp
+JsonFusionRedisDistributedDictionary<string, OrderDto> orders =
+    topics.GetOrAdd<string, OrderDto>("orders");
+
+orders[orderId] = dto;
+```
+
+Use a **distinct topic string** per logical stream (e.g. `"orders"`, `"invoices"`). The pair `(topic, TKey, TValue)` identifies the singleton; e.g. `GetOrAdd<string, OrderDto>("orders")` and `GetOrAdd<string, InvoiceDto>("orders")` are two different dictionaries.
+
+### ASP.NET / `Microsoft.Extensions.DependencyInjection`
+
+**Step 1 — `Program.cs`:** register the node once (`DictionaryDistributedNodeOptions` via lambda):
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using PLC.Shared.DistributedConcurrentDictionary;
+
+builder.Services.AddDistributedDictionaryNode(node =>
+{
+    node.RedisConnectionString = builder.Configuration["Redis"]!;
+    node.ConfigureFusionCacheOptions = fc => { /* FusionCacheOptions */ };
+    node.ConfigureDistributedDictionary = o =>
+    {
+        o.KeyPrefix = "myapp";
+        o.FailureMode = FusionRedisFailureMode.ReadOnlyStale;
+        o.OnTelemetry = static e => { /* ... */ };
+    };
+});
+```
+
+If `RedisConnectionString` is omitted, register `IConnectionMultiplexer` yourself before this call.
+
+**Step 2 — any service:** inject `IDistributedDictionaryFactory` and open as many topics as needed:
+
+```csharp
+public sealed class OrderService(IDistributedDictionaryFactory dicts)
+{
+    public void Save(string id, OrderDto dto) => dicts.GetOrAdd<string, OrderDto>("orders")[id] = dto;
+    public void SaveInvoice(string id, InvoiceDto inv) => dicts.GetOrAdd<string, InvoiceDto>("invoices")[id] = inv;
+}
 ```
 
 ## Failure/Policy Modes
